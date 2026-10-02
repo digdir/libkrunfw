@@ -1,0 +1,61 @@
+name: Digdir checks
+
+# The Digdir counterpart of upstream's kernel-ci.yml, which stays in the tree
+# unchanged and disabled. It runs the same kernel bundle build for the kernels
+# this fork ships. It leaves out upstream's freshness gate, because the kernel
+# version follows the Microsandbox release we build on, and the variants this
+# fork does not ship.
+#
+# There is no push trigger: changes reach main-digdir through pull requests,
+# whose check already covers the merge result, or by moving main-digdir to a
+# synchronization branch. A synchronization pull request rewrites history and
+# never gets pull_request checks, so run this on the sync branch with
+# workflow_dispatch.
+
+on:
+  pull_request:
+    branches: [main-digdir]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-digdir-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    if: github.repository == 'digdir/libkrunfw'
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x86_64
+            runner: ubuntu-24.04
+            packages: ""
+            make_args: ""
+          - name: Linux aarch64
+            runner: ubuntu-24.04-arm
+            packages: ""
+            make_args: ""
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install build dependencies
+        env:
+          EXTRA_PACKAGES: ${{ matrix.packages }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make gcc bc bison flex elfutils python3-pyelftools curl patch libelf-dev cpio xz-utils $EXTRA_PACKAGES
+
+      - name: Build kernel bundle
+        env:
+          MAKE_ARGS: ${{ matrix.make_args }}
+        run: make -j"$(nproc)" $MAKE_ARGS kernel.c

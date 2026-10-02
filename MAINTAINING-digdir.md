@@ -20,19 +20,23 @@ replace upstream's:
 
 ## Upstream workflows
 
-Upstream's workflow files stay unchanged and are disabled with `gh workflow disable <file>`. When a synchronization
-brings new upstream workflow files, disable them after moving `main-digdir`, unless they are useful for our CI.
+Upstream's workflow files stay unchanged and are disabled with `gh workflow disable <file>`. A file GitHub cannot
+parse, such as one that is entirely commented out, does not stay disabled and fails on every push, so the CI commit
+deletes such files. When a synchronization brings new upstream workflow files, disable them after moving
+`main-digdir`, unless they are useful for our CI.
 
 ## Synchronizing with upstream
 
 Do this before the Microsandbox synchronization, because its submodule pins the rewritten commit.
 
-1. Fast-forward `krunfw` from `upstream/krunfw`, and stop if that fails.
+1. Fast-forward `krunfw` from `upstream/krunfw`, and stop if that fails. The mirror still carries upstream's
+   comment-only workflow files, so pushing it may produce failed runs; delete them.
 2. Take the new base from the libkrunfw commit that the selected Microsandbox release pins. If that commit is not on
    `krunfw`, such as a pull request head that was squash-merged, use the `krunfw` commit with the identical tree. If
    the base is unchanged, stop here.
 3. Rebuild the patch queue on a `sync/libkrunfw-X.Y.Z` branch, where `X.Y.Z` is the Microsandbox release version, and
-   compare it with the old queue using `git range-diff`.
+   compare it with the old queue using `git range-diff`. Run
+   `gh workflow run check-digdir.yml --ref sync/libkrunfw-X.Y.Z`; a rewritten branch never gets `pull_request` checks.
 4. Resolve kernel configuration conflicts option by option, and after a kernel update check that the Digdir options
    survive `olddefconfig` (see [Checking kernel configuration
    changes](CONTRIBUTING-digdir.md#checking-kernel-configuration-changes)).

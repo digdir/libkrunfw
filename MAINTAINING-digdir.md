@@ -42,7 +42,9 @@ Do this before the Microsandbox synchronization, because its submodule pins the 
    changes](CONTRIBUTING-digdir.md#checking-kernel-configuration-changes)).
 5. Disable workflow files that upstream added (see [Upstream workflows](#upstream-workflows)).
 6. After approval, make sure every commit a published runtime still uses is tagged, then move the branch with
-   `git push --force-with-lease=main-digdir:<old-tip> origin sync/libkrunfw-X.Y.Z:main-digdir`.
+   `git push --force-with-lease=main-digdir:<old-tip> origin sync/libkrunfw-X.Y.Z:main-digdir`. Never use the sync
+   pull request's merge button, which would replay the rebuilt queue onto the old `main-digdir`. Once `main-digdir`
+   points at the sync branch's head, GitHub marks the pull request as merged by itself. Don't close or merge it.
 
 ## Tags and corresponding source
 

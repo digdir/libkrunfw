@@ -19,7 +19,8 @@ change has to be carried forward on each synchronization. The changes are the co
 upstream base; list them with `git log $(git merge-base origin/krunfw origin/main-digdir)..origin/main-digdir`. Apart
 from the Digdir documentation and CI, they change only the guest kernel configurations `config-libkrunfw_x86_64`,
 `config-libkrunfw_aarch64` and `config-libkrunfw-windows_x86_64`. We ship only the x86_64 and aarch64 kernels; the
-Windows x86_64 kernel gets the same networking options so that the Windows runtime can move to it.
+Windows x86_64 kernel gets the same networking options and POSIX message queues so that the Windows runtime can move
+to it.
 
 ## Contributing and maintenance
 

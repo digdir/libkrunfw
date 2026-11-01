@@ -2,7 +2,8 @@ name: Digdir checks
 
 # The Digdir counterpart of upstream's kernel-ci.yml, which stays in the tree
 # unchanged and disabled. It runs the same kernel bundle build for the kernels
-# this fork ships. It leaves out upstream's freshness gate, because the kernel
+# this fork ships, and for the Windows x86_64 kernel that the Windows runtime
+# is to move to. It leaves out upstream's freshness gate, because the kernel
 # version follows the Microsandbox release we build on, and the variants this
 # fork does not ship.
 #
@@ -42,6 +43,10 @@ jobs:
             runner: ubuntu-24.04-arm
             packages: ""
             make_args: ""
+          - name: Windows x86_64
+            runner: ubuntu-24.04
+            packages: ""
+            make_args: OS=Windows
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

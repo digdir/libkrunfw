@@ -17,8 +17,10 @@ instructions.
 The fork stays as close to upstream as possible and adds a change only where it is clearly needed, because every
 change has to be carried forward on each synchronization. The changes are the commits on `main-digdir` after the
 upstream base; list them with `git log $(git merge-base origin/krunfw origin/main-digdir)..origin/main-digdir`. Apart
-from the Digdir documentation and CI, they change only the guest kernel configurations `config-libkrunfw_x86_64` and
-`config-libkrunfw_aarch64`. We ship only the x86_64 and aarch64 kernels.
+from the Digdir documentation and CI, they change the guest kernel configurations `config-libkrunfw_x86_64` and
+`config-libkrunfw_aarch64` and add the kernel patch
+`patches/0036-arm64-kvm-map-guest-memory-executable-on-first-fault.patch`. We ship only the x86_64 and aarch64
+kernels.
 
 ## Contributing and maintenance
 

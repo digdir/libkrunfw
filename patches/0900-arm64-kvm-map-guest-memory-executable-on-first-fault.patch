@@ -1,0 +1,40 @@
+Subject: [PATCH] KVM: arm64: map guest memory executable on first fault
+
+Without FEAT_DIC, KVM maps guest memory non-executable and makes a page
+executable only when the guest first executes from it. That permission
+fault relaxes the stage-2 entry and invalidates the TLB with TLBI IPAS2E1
+followed by TLBI VMALLE1.
+
+When this kernel is itself a guest hypervisor under Apple's
+Hypervisor.framework, those invalidations are emulated by discarding
+every stage-2 mapping of the nested VM. The nested VM then faults its
+whole working set back in, and a workload that keeps executing from new
+pages, such as a JIT, runs at a small fraction of its normal speed.
+
+Map normal memory executable on the first fault, as KVM already does
+with FEAT_DIC. This stays coherent without DIC because the stage-2 map
+walker invalidates the instruction cache before it installs an
+executable entry. The cost is instruction cache maintenance on pages
+that are never executed.
+
+diff --git a/arch/arm64/kvm/mmu.c b/arch/arm64/kvm/mmu.c
+--- a/arch/arm64/kvm/mmu.c
++++ b/arch/arm64/kvm/mmu.c
+@@ -1642,8 +1642,15 @@ static int user_mem_abort(struct kvm_vcpu *vcpu, phys_addr_t fault_ipa,
+ 			prot |= KVM_PGTABLE_PROT_NORMAL_NC;
+ 		else
+ 			prot |= KVM_PGTABLE_PROT_DEVICE;
+-	} else if (cpus_have_final_cap(ARM64_HAS_CACHE_DIC) &&
+-		   (!nested || kvm_s2_trans_executable(nested))) {
++	} else if (!nested || kvm_s2_trans_executable(nested)) {
++		/*
++		 * libkrunfw: map normal memory executable on the first fault,
++		 * as if the CPU had DIC. The stage-2 map walker invalidates the
++		 * I-cache before installing an executable PTE, so this stays
++		 * coherent without DIC. It avoids a later permission fault and
++		 * its TLBI IPAS2E1 + TLBI VMALLE1, which Hypervisor.framework
++		 * emulates by dropping every nested stage-2 mapping.
++		 */
+ 		prot |= KVM_PGTABLE_PROT_X;
+ 	}
+ 
